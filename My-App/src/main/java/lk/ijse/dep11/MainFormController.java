@@ -63,8 +63,6 @@ public class MainFormController {
         employerlist=readEmployee();
         ObservableList<Employer> list = FXCollections.observableList(employerlist);
         tblCustomer.setItems(list);
-
-
     }
 
     private ArrayList<Employer> readEmployee() {

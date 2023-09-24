@@ -3,6 +3,7 @@ package lk.ijse.dep11;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import lk.ijse.dep11.tm.Employer;
 
@@ -28,6 +29,22 @@ public class MainFormController {
         tblCustomer.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("name"));
         tblCustomer.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("contact"));
 
+        tblCustomer.getSelectionModel().selectedItemProperty().addListener((o,old,current)->{
+            if(current==null){
+                btnDelete.setDisable(true);
+            } else{
+                txtID.setText(current.getId());
+                txtName.setText(current.getName());
+                txtContact.setText(current.getContact());
+                btnDelete.setDisable(false);
+            }
+        });
+
+        tblCustomer.setOnKeyPressed(e->{
+            if(e.getCode()== KeyCode.DELETE){
+                btnDelete.fire();
+            }
+        });
     }
 
 
@@ -45,7 +62,7 @@ public class MainFormController {
         if (!isDataValid()) return;
         List<Employer> list = getEmployee();
         for (Employer employer : list) {
-
+            if(tblCustomer.getSelectionModel().getSelectedItem()==employer) continue;
             if (employer.getContact().equals(txtContact.getText())) {
                 new Alert(Alert.AlertType.ERROR, "Contact number already exists ").show();
                 txtContact.requestFocus();
@@ -54,14 +71,24 @@ public class MainFormController {
             }
         }
 
-        Employer employer = new Employer(txtID.getText(), txtName.getText(), txtContact.getText());
-        getEmployee().add(employer);
-        btnNew.fire();
+        if(tblCustomer.getSelectionModel().isEmpty()){
+            Employer employer = new Employer(txtID.getText(),txtName.getText(),txtContact.getText());
+            getEmployee().add(employer);
+            btnNew.fire();
 
+        } else{
+            Employer employer = tblCustomer.getSelectionModel().getSelectedItem();
+            employer.setName(txtName.getText().strip());
+            employer.setContact(txtContact.getText().strip());
+            tblCustomer.refresh();
+            btnNew.fire();
 
+        }
     }
 
     public void btnDeleteOnACtion(ActionEvent actionEvent) {
+        getEmployee().remove(tblCustomer.getSelectionModel().getSelectedItem());
+        btnNew.fire();
     }
     private List<Employer> getEmployee(){
         return tblCustomer.getItems();

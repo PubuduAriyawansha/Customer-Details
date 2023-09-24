@@ -1,9 +1,8 @@
 package lk.ijse.dep11;
 
 import javafx.event.ActionEvent;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import lk.ijse.dep11.tm.Employer;
 
@@ -16,17 +15,50 @@ public class MainFormController {
     public TextField txtID;
     public TextField txtContact;
     public Button btnNew;
-    public TableView tblCustomer;
+    public TableView <Employer>tblCustomer;
     public Button btnSave;
     public Button btnDelete;
     public TextField txtSearch;
 
+    public void initialize(){
+        for (Control control: new Control[]{txtID,txtContact,txtName,btnSave,btnDelete}){
+            control.setDisable(true);
+        }
+        tblCustomer.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("id"));
+        tblCustomer.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("name"));
+        tblCustomer.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("contact"));
+
+    }
 
 
     public void btnNewOnAciton(ActionEvent actionEvent) {
+        txtID.setText(getNewEmployeeId());
+        for(Control control: new Control[]{txtName,txtContact,btnSave}){
+            if(control instanceof TextField) ((TextField) control).clear();
+            control.setDisable(false);
+        }
+        txtName.requestFocus();
+        tblCustomer.getSelectionModel().clearSelection();
     }
 
     public void btnSaveOnAction(ActionEvent actionEvent) {
+        if (!isDataValid()) return;
+        List<Employer> list = getEmployee();
+        for (Employer employer : list) {
+
+            if (employer.getContact().equals(txtContact.getText())) {
+                new Alert(Alert.AlertType.ERROR, "Contact number already exists ").show();
+                txtContact.requestFocus();
+                txtContact.selectAll();
+                return;
+            }
+        }
+
+        Employer employer = new Employer(txtID.getText(), txtName.getText(), txtContact.getText());
+        getEmployee().add(employer);
+        btnNew.fire();
+
+
     }
 
     public void btnDeleteOnACtion(ActionEvent actionEvent) {

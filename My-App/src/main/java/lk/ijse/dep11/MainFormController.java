@@ -1,5 +1,10 @@
 package lk.ijse.dep11;
 
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -7,6 +12,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import lk.ijse.dep11.tm.Employer;
 
+import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainFormController {
@@ -20,6 +27,7 @@ public class MainFormController {
     public Button btnSave;
     public Button btnDelete;
     public TextField txtSearch;
+    private ArrayList<Employer> employerlist;
 
     public void initialize(){
         for (Control control: new Control[]{txtID,txtContact,txtName,btnSave,btnDelete}){
@@ -39,12 +47,62 @@ public class MainFormController {
                 btnDelete.setDisable(false);
             }
         });
+        Platform.runLater(()->{
+            root.getScene().getWindow().setOnCloseRequest(e->{
+                saveEmployees();
+            });
+        });
+
 
         tblCustomer.setOnKeyPressed(e->{
             if(e.getCode()== KeyCode.DELETE){
                 btnDelete.fire();
             }
         });
+
+        employerlist=readEmployee();
+        ObservableList<Employer> list = FXCollections.observableList(employerlist);
+        tblCustomer.setItems(list);
+
+
+    }
+
+    private ArrayList<Employer> readEmployee() {
+        File file = new File("database.dep");
+        if(!file.exists()) return new ArrayList<>();
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            ObjectInputStream ois = new ObjectInputStream(bis);
+
+            try {
+                return (ArrayList<Employer>) ois.readObject();
+            } finally {
+                ois.close();
+            }
+
+        } catch (Exception e){
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Can't read file").show();
+            return new ArrayList<>();
+        }
+    }
+    private void saveEmployees(){
+        File file = new File("database.dep");
+
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            ObjectOutputStream oos = new ObjectOutputStream(bos);
+
+            try{
+                oos.writeObject(employerlist);
+            } finally {
+                oos.close();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
